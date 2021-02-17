@@ -1,0 +1,5 @@
+SPDX-License-Identifier: BSD-3-Clause
+
+Most of code is under BSD-3 Clause
+Some part of code are under proprietary licenses
+Header of each file specify which license is applicable
