@@ -1,3 +1,5 @@
 /.settings/
 /Debug/
 /Release/
+/yast-openpgpcard-fw JLink Debug.launch
+/yast-openpgpcard-fw JLink Release.launch
