@@ -568,16 +568,17 @@ sw_enum_t se_generate_rsa_key_pair(uint32_t keyId, size_t keylen,
 	CHECK_TRAP(SM_OK, Se05x_API_CheckObjectExists(PSESSION_CTX, keyId, &exists));
 	if (exists == kSE05x_Result_SUCCESS) { //overwrite existing key
 		LOG_I("Key object already exists");
-		policy = NULL;
+		policySet.value = NULL;
+		policySet.value_len = 0;
 		keylen = 0;
+	} else {
+		CHECK_TRAP(kStatus_SSS_Success, sss_se05x_create_object_policy_buffer(
+				policy,
+				&policies_buff[0],
+				&valid_policy_buff_len));
+		policySet.value = policies_buff;
+		policySet.value_len = valid_policy_buff_len;
 	}
-
-	CHECK_TRAP(kStatus_SSS_Success, sss_se05x_create_object_policy_buffer(
-			policy,
-			&policies_buff[0],
-			&valid_policy_buff_len));
-	policySet.value = policies_buff;
-	policySet.value_len = valid_policy_buff_len;
 
 
 	CHECK_RETURN(SM_OK, Se05x_API_WriteRSAKey(
@@ -605,10 +606,18 @@ sw_enum_t se_import_rsa_key_pair(uint32_t keyId, key_struct_t *key, sss_policy_t
 	uint8_t policies_buff[MAX_POLICY_BUFFER_SIZE];
 
 	CHECK_TRAP(SM_OK, Se05x_API_CheckObjectExists(PSESSION_CTX, keyId, &exists));
-	if (exists == kSE05x_Result_SUCCESS) {
+	if (exists == kSE05x_Result_SUCCESS) { //overwrite existing key
 		LOG_I("Key object already exists");
-		policy = NULL;
+		policySet.value = NULL;
+		policySet.value_len = 0;
 		keylen = 0;
+	} else {
+		CHECK_TRAP(kStatus_SSS_Success, sss_se05x_create_object_policy_buffer(
+				policy,
+				&policies_buff[0],
+				&valid_policy_buff_len));
+		policySet.value = policies_buff;
+		policySet.value_len = valid_policy_buff_len;
 	}
 
 	CHECK_TRAP(kStatus_SSS_Success,
