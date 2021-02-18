@@ -45,7 +45,7 @@ static uint8_t _gpg_pso_cds(gpg_handle_struct_t *gpgHandle) {
 	if(pw_sb.pw1_validity == 0x00) {
 		gpgHandle->activePin &= ~PW1_81_ACTIVE;
 	}
-	if (status == kStatus_SSS_Success) {
+	if (status == SW_SUCCESS) {
 		memcpy(pio->rspData, plain, plainLen);
 		pio->rspDataLen = plainLen;
 		se_inc_cnt(0x0093);
@@ -146,14 +146,10 @@ uint8_t gpg_internal_auth(gpg_handle_struct_t *gpgHandle) {
 			authenticationInputLen);
 	signatureLen += authenticationInputLen;
 
-	status = se_rsa_decrypt(keyId, signature, signatureLen, plain, &plainLen);
-	if (status == kStatus_SSS_Success) {
-		memcpy(pio->rspData, plain, plainLen);
-		pio->rspDataLen = plainLen;
-		return sendRsp(gpgHandle);
-	} else {
-		return sendError(gpgHandle, SW_ERR_ACCESS_DENIED_BASED_ON_POLICY);
-	}
+	CHECK_RETURN_SW(se_rsa_decrypt(keyId, signature, signatureLen, plain, &plainLen));
+	memcpy(pio->rspData, plain, plainLen);
+	pio->rspDataLen = plainLen;
+	return sendRsp(gpgHandle);
 }
 
 uint8_t gpg_gen_key(gpg_handle_struct_t *gpgHandle) {
