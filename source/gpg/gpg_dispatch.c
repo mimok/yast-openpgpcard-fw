@@ -17,11 +17,8 @@
 #include "usb_device_class.h"
 #include "iccd.h"
 
-void gpg_init(gpg_handle_struct_t *gpgHandle,
-		usb_device_iccd_control_request_struct_t inoutBuffer) {
-	if (kStatus_SSS_Success != se_init_context()) {
-		return;
-	}
+void gpg_init(gpg_handle_struct_t *gpgHandle, usb_device_iccd_control_request_struct_t inoutBuffer) {
+	CHECK_TRAP(kStatus_SSS_Success, se_init_context());
 	gpgHandle->activePin = 0x00;
 }
 

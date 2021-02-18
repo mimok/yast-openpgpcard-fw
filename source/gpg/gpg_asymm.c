@@ -81,10 +81,7 @@ static uint8_t _gpg_pso_dec(gpg_handle_struct_t *gpgHandle) {
 	cipherLen = pio->LC-1;
 	cipher = &pio->cmdData[1];
 
-	status = se_rsa_decrypt(keyId, cipher, cipherLen, plain, &plainLen);
-	if (status != kStatus_SSS_Success) {
-		return sendError(gpgHandle, SW_SECURITY_STATUS_NOT_SATISFIED);
-	}
+	CHECK_RETURN_SW(se_rsa_decrypt(keyId, cipher, cipherLen, plain, &plainLen));
 
 	idx = 0;
 	if(plain[idx++] != 0x00) return sendError(gpgHandle, SW_WRONG_DATA);

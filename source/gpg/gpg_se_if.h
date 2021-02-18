@@ -48,7 +48,7 @@ sw_enum_t se_terminate();
 sss_status_t se_get_random(uint8_t *buff, uint16_t size);
 sw_enum_t se_generate_rsa_key_pair(uint32_t keyId, size_t keylen, sss_policy_t *policy);
 sw_enum_t se_read_rsa_pub_key (uint32_t keyId, uint8_t *modulus, size_t *modLen, uint8_t *exponent, size_t *expLen);
-sss_status_t se_rsa_decrypt(uint32_t keyId, uint8_t *cipher, size_t cipherLen, uint8_t* plain, size_t *plainLen);
+sw_enum_t se_rsa_decrypt(uint32_t keyId, uint8_t *cipher, size_t cipherLen, uint8_t* plain, size_t *plainLen);
 void se_get_status_indicator(uint8_t *status);
 sw_enum_t se_activate();
 sw_enum_t se_get_origin(uint32_t objectID, uint8_t *origin);
