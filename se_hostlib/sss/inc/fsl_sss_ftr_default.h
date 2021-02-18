@@ -82,17 +82,17 @@
 
 
 
-/** SE05X_Ver : SE50 Applet version.
+/** SE05X_Ver : SE05X Applet version.
  *
- * 03_XX would only enable features of version 03.XX version of applet.
- * But, this would be compatibility would be added for newer versions of the Applet.
- * When 04_XX is selected, it would expose features available in 04_XX at compile time.
+ * Selection of Applet version 03_XX enables SE050 features.
+ * Selection of Applet version 06_00 enables SE051 features.
+ *
  */
 
 /** SE050 */
 #define SSS_HAVE_SE05X_VER_03_XX 1
 
-/** NXP Internal - 6.00 */
+/** SE051 */
 #define SSS_HAVE_SE05X_VER_06_00 0
 
 #if (( 0                             \

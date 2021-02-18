@@ -40,16 +40,21 @@ U16 smComT1oI2C_AnswerToReset(void* conn_ctx, U8 *T1oI2Catr, U16 *T1oI2CatrLen);
 U16 smComT1oI2C_Close(void *conn_ctx, U8 mode)
 {
     ESESTATUS status;
-    status=phNxpEse_EndOfApdu(conn_ctx);
-    //status=phNxpEse_chipReset();
-    if(status ==ESESTATUS_SUCCESS)
-    {
-        status=phNxpEse_close(conn_ctx);
+    if (conn_ctx) {
+        status=phNxpEse_EndOfApdu(conn_ctx);
+        //status=phNxpEse_chipReset();
+        if(status ==ESESTATUS_SUCCESS)
+        {
+            status=phNxpEse_close(conn_ctx);
+        }
+        else
+        {
+            LOG_E("Failed to close session ");
+            return SMCOM_COM_FAILED;
+        }
     }
-    else
-    {
-        LOG_E("Failed to close session ");
-        return SMCOM_COM_FAILED;
+    else {
+        LOG_W("Invalid conn_ctx");
     }
     return SMCOM_OK;
 }

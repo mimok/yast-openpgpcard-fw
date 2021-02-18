@@ -9,23 +9,17 @@
 extern "C" {
 #endif
 
-#include <ex_sss_boot.h>
 #include <fsl_sss_se05x_apis.h>
 #include <nxLog_App.h>
 #include <se05x_APDU.h>
 #include <se05x_const.h>
-#include <se05x_ecc_curves.h>
-#include <se05x_ecc_curves_values.h>
 #include <se05x_tlv.h>
 #include <fsl_sss_se05x_policy.h>
 
 #include "sm_timer.h"
-#include "ax_reset.h"
-
-#if (SSS_HAVE_MBEDTLS)
 #include "ksdk_mbedtls.h"
 #include "mbedtls/sha256.h"
-#endif
+
 
 #ifdef __cplusplus
 }

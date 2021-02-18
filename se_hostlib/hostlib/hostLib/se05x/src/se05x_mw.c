@@ -8,7 +8,7 @@
 #include <se05x_const.h>
 #include <se05x_APDU.h>
 #include <nxLog_hostLib.h>
-//#include <ex_sss_auth.h>
+#include <ex_sss_auth.h>
 #include <ex_sss_objid.h>
 #include <smCom.h>
 #include <string.h>

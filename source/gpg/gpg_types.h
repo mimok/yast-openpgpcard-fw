@@ -7,7 +7,7 @@
 
 #include <assert.h>
 #include <stdint.h>
-#include <ex_sss_boot.h>
+#include <stddef.h>
 
 #ifndef GPG_GPG_TYPES_H_
 #define GPG_GPG_TYPES_H_

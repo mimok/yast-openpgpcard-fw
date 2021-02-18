@@ -557,6 +557,7 @@ static sss_status_t sss_session_auth_open(sss_se05x_session_t *session,
         LOG_W("!!!Not recommended for production use.!!!");
         se05xSession->fp_Transform = &se05x_Transform;
         se05xSession->fp_DeCrypt   = &se05x_DeCrypt;
+
         status = se05x_CreateVerifyUserIDSession(se05xSession, auth_id, &pAuthCtx->auth.ctx.idobj, &se05x_policy);
         if (status != SM_OK) {
             se05xSession->hasSession = 1;
@@ -770,10 +771,7 @@ cleanup:
 
 void sss_se05x_session_close(sss_se05x_session_t *session)
 {
-    if (session->s_ctx.value[0] || session->s_ctx.value[1] || session->s_ctx.value[2] || session->s_ctx.value[3] ||
-        session->s_ctx.value[4] || session->s_ctx.value[5] || session->s_ctx.value[6] || session->s_ctx.value[7]) {
-        Se05x_API_CloseSession(&session->s_ctx);
-    }
+    Se05x_API_CloseSession(&session->s_ctx);
     if (session->s_ctx.pChannelCtx == NULL) {
         SM_Close(session->s_ctx.conn_ctx, 0);
     }
@@ -3820,7 +3818,9 @@ sss_status_t sss_se05x_key_store_get_key_attst(sss_se05x_key_store_t *keyStore,
         ENSURE_OR_GO_EXIT(status == SM_OK);
         break;
 
-    case kSSS_CipherType_HMAC: {
+    case kSSS_CipherType_HMAC:
+    case kSSS_CipherType_CMAC:
+    case kSSS_CipherType_UserID: {
         attst_data->data[0].timeStampLen = sizeof(SE05x_TimeStamp_t);
         status                           = Se05x_API_ReadObject_W_Attst(&keyStore->session->s_ctx,
             keyObject->keyId,
@@ -5975,7 +5975,7 @@ exit:
 
 /* End: se05x_tunnel */
 
-#if SSSFTR_SE05X_ECC
+#if SSSFTR_SE05X_ECC && SSSFTR_SE05X_KEY_SET
 sss_status_t sss_se05x_key_store_create_curve(Se05xSession_t *pSession, uint32_t curve_id)
 {
     sss_status_t retval = kStatus_SSS_Fail;

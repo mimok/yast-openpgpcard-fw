@@ -9,7 +9,6 @@
 extern "C" {
 #endif
 
-#include <ex_sss_boot.h>
 #include <fsl_sss_se05x_apis.h>
 #include <fsl_sss_api.h>
 #include <nxLog_App.h>

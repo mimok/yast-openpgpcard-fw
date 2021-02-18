@@ -86,6 +86,17 @@ sss_status_t ex_sss_boot_open(ex_sss_boot_ctx_t *pCtx, const char *portName)
     return status;
 }
 
+sss_status_t ex_sss_boot_open_on_id(ex_sss_boot_ctx_t *pCtx, const char *portName, const int32_t authId)
+{
+    sss_status_t status = kStatus_SSS_Fail;
+
+#if SSS_HAVE_APPLET_SE05X_IOT
+    status = ex_sss_boot_se05x_open_on_Id(pCtx, portName,authId);
+#endif
+    return status;
+}
+
+
 sss_status_t ex_sss_boot_factory_reset(ex_sss_boot_ctx_t *pCtx)
 {
     sss_status_t status = kStatus_SSS_Fail;

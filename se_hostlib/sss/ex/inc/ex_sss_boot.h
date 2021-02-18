@@ -192,6 +192,9 @@ bool ex_sss_boot_isSocketPortName(const char *portName);
 /** Open an example session */
 sss_status_t ex_sss_boot_open(ex_sss_boot_ctx_t *pCtx, const char *portName);
 
+/** Open an example cc session */
+sss_status_t ex_sss_boot_open_on_id(ex_sss_boot_ctx_t *pCtx, const char *portName, const int32_t authId);
+
 /** Open an example session */
 sss_status_t ex_sss_boot_factory_reset(ex_sss_boot_ctx_t *pCtx);
 

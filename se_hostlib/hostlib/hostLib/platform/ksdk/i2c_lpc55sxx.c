@@ -32,7 +32,6 @@
 #include "sm_timer.h"
 #include <stdio.h>
 #include "fsl_gpio.h"
-#include "sci2c_cfg.h"
 
 //#define DELAY_I2C_US          (T_CMDG_USec)
 #define DELAY_I2C_US (0)
@@ -44,9 +43,7 @@
 #define AX_I2C_CLK (12000000)
 #define AX_I2CM_IRQN FLEXCOMM1_IRQn
 
-#if defined(SCI2C)
-#define I2C_BAUDRATE (400u * 1000u) // 400K
-#elif defined(T1oI2C)
+#if defined(T1oI2C)
 //#define I2C_BAUDRATE (3400u * 1000u) // 3.4. Not used by default
 #define I2C_BAUDRATE (1700u * 1000u) // 1700K
 #else
@@ -173,9 +170,6 @@ unsigned int axI2CWrite(void* conn_ctx, unsigned char bus_unused_param, unsigned
     i2c_master_transfer_t masterXfer;
     memset(&masterXfer, 0, sizeof(masterXfer)); //clear values
 
-#if defined(SCI2C_DEBUG)
-    I2C_LOG_PRINTF("\r\n I2C Write \r\n");
-#endif
     masterXfer.slaveAddress = addr >> 1; // the address of the A70CM
     masterXfer.direction = kI2C_Write;
     masterXfer.subaddress = 0;
@@ -191,155 +185,11 @@ unsigned int axI2CWrite(void* conn_ctx, unsigned char bus_unused_param, unsigned
     return I2C_OK;
 }
 
-#if defined SCI2C
-//for ARM6 taken care at file level
-// #ifdef __ARMCC_VERSION
-// #pragma O0
-// #endif
-
-#ifdef __ICCARM__
-#pragma optimize = none
-#endif
-
-#if defined(__GNUC__) && !defined(__ARMCC_VERSION)
-__attribute__((optimize("O0")))
-#endif
-
-unsigned int
-axI2CWriteRead(void* conn_ctx,
-    unsigned char bus_unused_param,
-    unsigned char addr,
-    unsigned char *pTx,
-    unsigned short txLen,
-    unsigned char *pRx,
-    unsigned short *pRxLen)
-{
-    status_t result;
-    i2c_master_transfer_t masterXfer;
-    uint32_t master_state;
-    uint32_t status = 0;
-    memset(&masterXfer, 0, sizeof(masterXfer)); //clear values
-    *pRxLen = 0;
-    memset(pRx, 0, 2);
-
-#if defined(SCI2C_DEBUG)
-    I2C_LOG_PRINTF("\r\n I2C Write \r\n");
-#endif
-    masterXfer.slaveAddress = addr >> 1; // the address of the A70CM
-    masterXfer.direction = kI2C_Write;
-    masterXfer.subaddress = 0;
-    masterXfer.subaddressSize = 0;
-    masterXfer.data = pTx;
-    masterXfer.dataSize = txLen;
-    masterXfer.flags = kI2C_TransferNoStopFlag;
-
-    /* Send master blocking data to slave */
-    result = I2C_MasterTransferBlocking(AX_I2CM, &masterXfer);
-#if defined(I2C_DEBUG) || 0
-    I2C_LOG_PRINTF("\r\n I2C_WriteRead\r\n");
-    I2C_LOG_PRINTF("\r\n WRITE[R]: 0x%04lX", result);
-    //for(int i = 0; i < txLen; i++)
-    //I2C_LOG_PRINTF("%.2X ", pTx[i]);
-#endif //I2C_DEBUG
-    RETURN_ON_BAD_I2cStatus(result)
-
-        // Reading from A71CH
-
-        masterXfer.slaveAddress = addr >> 1; // the address of the A70CM
-    masterXfer.direction = kI2C_Read;
-    masterXfer.subaddress = 0;
-    masterXfer.subaddressSize = 0;
-    masterXfer.data = pRx;
-    masterXfer.dataSize = 0;
-    masterXfer.flags = kI2C_TransferRepeatedStartFlag;
-
-    /* Send master blocking data to slave */
-    result = I2C_MasterTransferBlocking(AX_I2CM, &masterXfer);
-//    DEBUG_PRINT_KINETIS_I2C("RD1", result);
-    RETURN_ON_BAD_I2cStatus(result);
-
-    volatile uint8_t nRead = 0;
-    if (result == kStatus_Success) {
-        do {
-            status = AX_I2CM->STAT;
-        } while ((status & I2C_STAT_MSTPENDING_MASK) == 0);
-        AX_I2CM->STAT = (I2C_STAT_MSTARBLOSS_MASK | I2C_STAT_MSTSTSTPERR_MASK);
-
-        nRead = AX_I2CM->MSTDAT;
-
-        AX_I2CM->MSTCTL = I2C_MSTCTL_MSTCONTINUE_MASK;
-        *pRxLen = nRead + 1;
-        *pRx++ = nRead;
-
-        while (nRead--) {
-            do {
-                status = I2C_GetStatusFlags(AX_I2CM);
-            } while ((status & I2C_STAT_MSTPENDING_MASK) == 0);
-
-            AX_I2CM->STAT = (I2C_STAT_MSTARBLOSS_MASK | I2C_STAT_MSTSTSTPERR_MASK);
-
-            if (status & (I2C_STAT_MSTARBLOSS_MASK | I2C_STAT_MSTSTSTPERR_MASK)) {
-                break;
-            }
-
-            master_state = (status & I2C_STAT_MSTSTATE_MASK) >> I2C_STAT_MSTSTATE_SHIFT;
-            switch (master_state) {
-            case I2C_STAT_MSTCODE_RXREADY:
-                /* ready to send next byte */
-                if (nRead == 0) {
-                    AX_I2CM->MSTCTL = I2C_MSTCTL_MSTSTOP_MASK;
-                    do {
-                        status = I2C_GetStatusFlags(AX_I2CM);
-                    } while ((status & I2C_STAT_MSTPENDING_MASK) == 0);
-                    AX_I2CM->STAT = (I2C_STAT_MSTARBLOSS_MASK | I2C_STAT_MSTSTSTPERR_MASK);
-                }
-                if (nRead) {
-                    AX_I2CM->MSTCTL = I2C_MSTCTL_MSTCONTINUE_MASK;
-                }
-                *(pRx++) = AX_I2CM->MSTDAT;
-                break;
-            case I2C_STAT_MSTCODE_NACKADR:
-                result = kStatus_I2C_Addr_Nak;
-                break;
-            case I2C_STAT_MSTCODE_NACKDAT:
-                /* slave nacked the last byte */
-                result = kStatus_I2C_Nak;
-                break;
-
-            default:
-                /* unexpected state */
-                result = kStatus_I2C_UnexpectedState;
-                break;
-            }
-
-            if (result != kStatus_Success) {
-                RETURN_ON_BAD_I2cStatus(result);
-            }
-        }
-
-        if (status & I2C_STAT_MSTARBLOSS_MASK) {
-            result = kStatus_I2C_ArbitrationLost;
-            RETURN_ON_BAD_I2cStatus(result);
-        }
-
-        if (status & I2C_STAT_MSTSTSTPERR_MASK) {
-            result = kStatus_I2C_StartStopError;
-            RETURN_ON_BAD_I2cStatus(result);
-        }
-    }
-    return I2C_OK;
-}
-#endif /*SCI2C*/
-
 unsigned int axI2CRead(void* conn_ctx, unsigned char bus, unsigned char addr, unsigned char *pRx, unsigned short rxLen)
 {
     i2c_master_transfer_t masterXfer;
     status_t result;
     memset(&masterXfer, 0, sizeof(masterXfer)); //clear values
-
-#if defined(SCI2C_DEBUG)
-    I2C_LOG_PRINTF("\r\n I2C Read \r\n");
-#endif
 
     masterXfer.slaveAddress = addr >> 1; // the address of the A70CM
     //masterXfer.slaveAddress = addr;

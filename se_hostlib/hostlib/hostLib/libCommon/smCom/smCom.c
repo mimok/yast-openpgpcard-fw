@@ -17,9 +17,11 @@
 
 #if AX_EMBEDDED && USE_RTOS
 #include "FreeRTOS.h"
-#include "FreeRTOSIPConfig.h"
 #include "semphr.h"
-#include "task.h"
+#endif
+
+#if defined(SMCOM_JRCP_V2)
+#include "smComJRCP.h"
 #endif
 
 #if (__GNUC__ && !AX_EMBEDDED)
@@ -28,6 +30,12 @@
     static pthread_mutex_t gSmComlock;
 #elif AX_EMBEDDED && USE_RTOS
     static SemaphoreHandle_t gSmComlock;
+#endif
+
+#if (__GNUC__ && !AX_EMBEDDED) || (AX_EMBEDDED && USE_RTOS)
+#define USE_LOCK 1
+#else
+#define USE_LOCK 0
 #endif
 
 #if (__GNUC__ && !AX_EMBEDDED)
@@ -96,6 +104,8 @@ void smCom_DeInit(void)
     	vSemaphoreDelete(gSmComlock);
     }
 #endif
+    pSmCom_Transceive = NULL;
+    pSmCom_TransceiveRaw = NULL;
 }
 
 /**
@@ -142,3 +152,19 @@ U32 smCom_TransceiveRaw(void *conn_ctx, U8 * pTx, U16 txLen, U8 * pRx, U32 * pRx
     }
     return ret;
 }
+
+#if defined(SMCOM_JRCP_V2)
+void smCom_Echo(void *conn_ctx, const char *comp, const char *level, const char *buffer)
+{
+#if USE_LOCK
+    /* If this function is called before smcom init 
+    then Lock fails, return without echo */
+    if (pSmCom_TransceiveRaw == NULL) {
+        return;
+    }
+#endif
+    LOCK_TXN();
+    smComJRCP_Echo(conn_ctx, comp, level, buffer);
+    UNLOCK_TXN();
+}
+#endif
